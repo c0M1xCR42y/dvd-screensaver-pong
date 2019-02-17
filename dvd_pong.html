@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>forgive me father for i have sinned</title>
+    <style>
+        body {
+            background-color: white;
+            margin: 0;
+            border: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <img id="background" src="youtube.png" style="display: none;"></img>
+    <img id="pewdiepie" src="pewdiepie.jfif" style="display: none;"></img>
+    <img id="tseries" src="tseries.png" style="display: none;"></img>
+    <img id="dvdImg" src="screensaver.png" style="display: none;"></img>
+    <canvas id="gameCanvas" width="650" height="500" onclick="mouseEvents(event)" tabindex="0"></canvas>
+    <script>
+        var game = document.getElementById("gameCanvas");
+        var gC = game.getContext("2d");
+        gC.textAlign = "center";
+
+        var background = document.getElementById("background");
+        var pewdiepie = document.getElementById("pewdiepie");
+        var tseries = document.getElementById("tseries");
+        var dvd = document.getElementById("dvdImg");
+
+        var canvasWidth = 650;
+        var canvasHeight = 500;
+
+        var isPlay = false;
+        var singleplayer;
+        var gameEnded = false;
+
+        var width = 10;
+        var height = 100;
+        var player1X = 50;
+        var player1Y = (canvasHeight / 2) - (height / 2);
+        var player2X = (canvasWidth - 50) - width;
+        var player2Y = (canvasHeight / 2) - (height / 2);
+        var player1Score = 0;
+        var player2Score = 0;
+        var pSpeed = 3;
+
+        var goTo = 0;
+
+        var dvdW = 100;
+        var dvdX = (canvasWidth / 2) - (dvdW / 2);
+        var dvdY = (canvasHeight / 2) - (dvdW / 2);
+        var dvdAngle = 0
+        var dvdSpeed = 1.5;
+        var dvdVertical = true; // if true, delta y = 1, if false, delta x = 1
+        var dvdTangent = 0;
+
+        var maxGoals = 10;
+
+        var keys = [false, false, false, false, false];
+
+        function mouseEvents(event) {
+            if (!isPlay) {
+                isPlay = true;
+                if (event.clientX < canvasWidth / 2) {
+                    singleplayer = true;
+                } else {
+                    singleplayer = false;
+                }
+            }
+        }
+
+        game.addEventListener("keydown", function (e) {
+            if (e.keyCode == 87) {
+                keys[0] = true;
+            }
+            if (e.keyCode == 83) {
+                keys[1] = true;
+            }
+            if (e.keyCode == 38) {
+                keys[2] = true;
+            }
+            if (e.keyCode == 40) {
+                keys[3] = true;
+            }
+            if (e.keyCode == 32) {
+                keys[4] = true;
+            }
+        }, false);
+        game.addEventListener("keyup", function (e) {
+            if (e.keyCode == 87) {
+                keys[0] = false;
+            }
+            if (e.keyCode == 83) {
+                keys[1] = false;
+            }
+            if (e.keyCode == 38) {
+                keys[2] = false;
+            }
+            if (e.keyCode == 40) {
+                keys[3] = false;
+            }
+            if (e.keyCode == 32) {
+                keys[4] = false;
+            }
+        }, false);
+
+        function play() {
+            setTimeout('play()', 0);
+
+            if (isPlay) {
+                gC.drawImage(background, 0, 0, canvasWidth, canvasHeight);
+                gC.fillStyle = "black";
+                gC.font = "25px Arial";
+                gC.textAlign = "left";
+                gC.fillText("Sub Count: " + player1Score, 25, 50);
+                gC.textAlign = "right";
+                gC.fillText("Sub Count: " + player2Score, canvasWidth - 25, 50);
+                gC.textAlign = "center";
+
+                player1();
+                player2();
+                drawDVD();
+
+                move();
+                bounce();
+
+                wins();
+
+                if (singleplayer) {
+                    goTo = (dvdX * dvdTangent) + dvdY + (dvdW / 2);
+                    if (player1Y < goTo) {
+                        if (player1Y <= canvasHeight - height) {
+                            player1Y += pSpeed;
+                        }
+                    } else if (player1Y > goTo) {
+                        if (player1Y >= 0) {
+                            player1Y -= pSpeed;
+                        }
+                    } else {
+                        //
+                    }
+
+                    if (keys[2]) {
+                        if (player2Y >= 0) {
+                            player2Y -= pSpeed;
+                        }
+                    }
+                    if (keys[3]) {
+                        if (player2Y <= canvasHeight - height) {
+                            player2Y += pSpeed;
+                        }
+                    }
+                } else {
+                    if (keys[0]) {
+                        if (player1Y >= 0) {
+                            player1Y -= pSpeed;
+                        }
+                    }
+                    if (keys[1]) {
+                        if (player1Y <= canvasHeight - height) {
+                            player1Y += pSpeed;
+                        }
+                    }
+                    if (keys[2]) {
+                        if (player2Y >= 0) {
+                            player2Y -= pSpeed;
+                        }
+                    }
+                    if (keys[3]) {
+                        if (player2Y <= canvasHeight - height) {
+                            player2Y += pSpeed;
+                        }
+                    }
+                }
+            } else {
+                gC.fillStyle = "darkgray";
+                gC.fillRect(0, 0, canvasWidth, canvasHeight);
+                gC.fillStyle = "lightgray";
+                gC.fillRect(0, 0, canvasWidth / 2, canvasHeight);
+                gC.fillStyle = "black";
+                gC.font = "50px Arial";
+                gC.textAlign = "center";
+                gC.fillText("1 Player", canvasWidth / 4, canvasHeight / 2);
+                gC.fillText("2 Player", canvasWidth - (canvasWidth / 4), canvasHeight / 2);
+            }
+
+            function player1() {
+                gC.fillStyle = "black";
+                gC.fillRect(player1X, player1Y, width, height);
+                gC.drawImage(tseries, player1X - 50 + width, player1Y + 25, 25, 50);
+            }
+            function player2() {
+                gC.fillRect(player2X, player2Y, width, height);
+                gC.drawImage(pewdiepie, player2X + width, player2Y + 25, 50, 50);
+            }
+            function drawDVD() {
+                gC.drawImage(dvd, dvdX, dvdY, dvdW, dvdW);
+            }
+
+            function move() {
+                dvdTangent = Math.tan(dvdAngle * (Math.PI / 180));
+                if (dvdAngle <= 45) {
+                    dvdVertical = false;
+                } else {
+                    dvdVertical = true;
+                }
+                if (dvdVertical) {
+                    dvdY += dvdSpeed;
+                    dvdX += (dvdSpeed / dvdTangent);
+                } else {
+                    dvdX += dvdSpeed;
+                    dvdY += (dvdSpeed * dvdTangent);
+                }
+            }
+            function bounce() {
+                if (dvdX + dvdW >= player2X && dvdX + dvdW <= player2X + width) { // if dvd's x hits player 2's x
+                    if (dvdY <= player2Y + height && dvdY + dvdW >= player2Y) {
+                        dvdX = player2X - dvdW;
+                        dvdSpeed = -1 * dvdSpeed;
+                        if ((dvdY + dvdW <= player2Y + (height / 2) && dvdY + dvdW >= player2Y) || (dvdY <= player2Y + (height / 2) && dvdY >= player2Y)) { // if dvd's y hits upper part of player 2's y
+                            dvdAngle = -1 * ((height / 2) / 89) * (dvdY + (dvdW / 2) - player2Y);
+                        } else if ((dvdY <= player2Y + height && dvdY >= player2Y + (height / 2)) || (dvdY + dvdW <= player2Y + height && dvdY + dvdW >= player2Y + (height / 2))) { // lower part
+                            dvdAngle = ((height / 2) / 89) * (player2Y + height - dvdY - (dvdW / 2));
+                        }
+                    }
+                }
+                if (dvdX <= player1X + width && dvdX >= player1X) { // if dvd's x hits player 1's x
+                    if (dvdY <= player1Y + height && dvdY + dvdW >= player1Y) {
+                        dvdX = player1X + width;
+                        dvdSpeed = -1 * dvdSpeed;
+                        if ((dvdY + dvdW <= player1Y + (height / 2) && dvdY + dvdW >= player1Y) || (dvdY <= player1Y + (height / 2) && dvdY >= player1Y)) { // if dvd's y hits upper part of player 1's y
+                            dvdAngle = ((height / 2) / 89) * (dvdY + (dvdW / 2) - player1Y);
+                        } else if ((dvdY <= player1Y + height && dvdY >= player1Y + (height / 2)) || (dvdY + dvdW <= player1Y + height && dvdY + dvdW >= player1Y + (height / 2))) { // lower part
+                            dvdAngle = -1 * ((height / 2) / 89) * (player1Y + height - dvdY - (dvdW / 2));
+                        }
+                    }
+                }
+                if (dvdY <= 0) {
+                    dvdAngle = -1 * dvdAngle;
+                    dvdY = 0;
+                }
+                if (dvdY + dvdW >= canvasHeight) {
+                    dvdAngle = -1 * dvdAngle;
+                    dvdY = canvasHeight - dvdW;
+                }
+            }
+
+            function wins() {
+                function reset() {
+                    dvdX = canvasWidth / 2 - (dvdW / 2);
+                    dvdY = canvasHeight / 2 - (dvdW / 2);
+                    dvdSpeed = -1 * dvdSpeed;
+                    dvdAngle = 0;
+                }
+                if (dvdX <= 0) {
+                    player2Score++;
+                    reset();
+                }
+                if (dvdX + dvdW >= canvasWidth) {
+                    player1Score++;
+                    reset();
+                }
+                if (player2Score >= maxGoals) {
+                    reset();
+                    gameEnded = true;
+                    gC.fillStyle = "black";
+                    gC.font = "50px Arial";
+                    gC.fillText("PewDiePie Won!", canvasWidth / 2, 150);
+                    gC.font = "25px Arial";
+                    gC.fillText("(Space to play again)", canvasWidth / 2, 400);
+                }
+                if (player1Score >= maxGoals) {
+                    reset();
+                    gameEnded = true;
+                    gC.fillStyle = "black";
+                    gC.font = "50px Arial";
+                    gC.fillText("T-Series Won!", canvasWidth / 2, 150);
+                    gC.font = "25px Arial";
+                    gC.fillText("(Space to play again)", canvasWidth / 2, 400);
+                }
+                if (gameEnded) {
+                    if (keys[4]) {
+                        reset();
+                        player1Score = 0;
+                        player2Score = 0;
+                        player1Y = (canvasHeight / 2) - (height / 2);
+                        player2Y = (canvasHeight / 2) - (height / 2);
+                        gameEnded = false;
+                    }
+                }
+            }
+        }
+        play();
+    </script>
+</body>
+
+</html>
